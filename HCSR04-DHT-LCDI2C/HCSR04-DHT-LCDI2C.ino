@@ -25,6 +25,10 @@ float distanceCm, distanceInch;
 #define TOUCH_PIN 13
 int touchValue = 0;
 int threshold = 50;
+bool showDHT = true;
+unsigned long lastTouchTime = 0;
+const int debounceDelay = 1000;
+
 
 // Function Prototypes 
 void readTouch();
@@ -54,7 +58,7 @@ void setup() {
 void loop() {
   readTouch();
 
-  if (touchValue < threshold) {
+  if (showDHT) {
     readDHT();
     displayLCD("Hum: " + String(humidity, 1) + "%", "Temp: " + String(temperature, 1) + "C");
   } else {
@@ -70,6 +74,14 @@ void readTouch() {
   touchValue = touchRead(TOUCH_PIN);
   Serial.print("Touch Value: ");
   Serial.println(touchValue);
+
+  unsigned long currentTime = millis();
+
+  if (touchValue < threshold && (currentTime - lastTouchTime > debounceDelay)) {
+    showDHT = !showDHT;
+    lastTouchTime = currentTime;
+    Serial.println("Tampilan berubah!");
+  }
 }
 
 // Read DHT Sensor 
