@@ -63,7 +63,17 @@ void loop() {
     displayLCD("Hum: " + String(humidity, 1) + "%", "Temp: " + String(temperature, 1) + "C");
   } else {
     readUltrasonic();
-    displayLCD(String(distanceCm, 1) + " cm", String(distanceInch, 1) + " inch");
+    String text;
+    if (distanceCm <= 10){
+      text = "     Bahaya";
+    } else if (distanceCm > 10 && distanceCm <= 20) {
+      text = "Bahaya Mendekat";
+    } else if (distanceCm > 20 && distanceCm <= 30) {
+      text = " Bahaya Menjauh";
+    } else if (distanceCm > 30){
+      text = "      Aman";
+    }
+    displayLCD("Jarak: " + String(distanceCm, 1) + " cm", text);
   }
 
   delay(1000);
