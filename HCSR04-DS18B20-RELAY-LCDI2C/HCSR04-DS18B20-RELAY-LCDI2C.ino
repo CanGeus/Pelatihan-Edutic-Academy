@@ -25,7 +25,7 @@ unsigned long lastTouchTime = 0;
 const int debounceDelay = 1000;
 
 // DS18B20 Setup
-const int oneWireBus = 4;
+const int oneWireBus = 14;
 OneWire oneWire(oneWireBus);
 DallasTemperature sensors(&oneWire);
 float temperatureC;
