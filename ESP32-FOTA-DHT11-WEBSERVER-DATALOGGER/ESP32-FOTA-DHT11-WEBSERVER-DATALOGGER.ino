@@ -6,8 +6,8 @@
 #include <NTPClient.h>
 #include <Update.h>
 
-const char *ssid = "webweb";
-const char *password = "11112222";
+const char *ssid = "SSID";
+const char *password = "PASSWORD";
 
 #define DHT_PIN 14
 #define DHT_TYPE DHT11
@@ -27,7 +27,8 @@ unsigned long lastRead = 0;
 const unsigned long sensorInterval = 1000;
 
 // Log data
-struct LogData {
+struct LogData
+{
   float temperature;
   float humidity;
   String timestamp;
@@ -36,9 +37,10 @@ const int logSize = 16;
 LogData logs[logSize];
 int logIndex = 0;
 
-const char* days[] = {"Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"};
+const char *days[] = {"Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"};
 
-String getTimeString() {
+String getTimeString()
+{
   time_t now = timeClient.getEpochTime();
   struct tm *t = localtime(&now);
   char buf[30];
@@ -46,17 +48,20 @@ String getTimeString() {
   return String(days[t->tm_wday]) + ", " + buf;
 }
 
-float readTemp() {
+float readTemp()
+{
   float t = dht.readTemperature();
   return isnan(t) ? lastTemp : t;
 }
-float readHum() {
+float readHum()
+{
   float h = dht.readHumidity();
   return isnan(h) ? lastHum : h;
 }
 
 // ====================== SETUP ======================
-void setup() {
+void setup()
+{
   Serial.begin(115200);
   dht.begin();
   pinMode(RELAY1, OUTPUT);
@@ -66,13 +71,19 @@ void setup() {
 
   WiFi.begin(ssid, password);
   Serial.print("Menghubungkan WiFi");
-  while (WiFi.status() != WL_CONNECTED) { delay(300); Serial.print("."); }
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(300);
+    Serial.print(".");
+  }
   Serial.println("\nTerhubung: " + WiFi.localIP().toString());
 
   timeClient.begin();
-  if (MDNS.begin("esp32")) Serial.println("MDNS aktif");
+  if (MDNS.begin("esp32"))
+    Serial.println("MDNS aktif");
 
-  server.on("/", []() {
+  server.on("/", []()
+            {
     static const char html[] PROGMEM = R"rawliteral(
 <!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -117,65 +128,65 @@ async function toggleRelay1(){const r=await fetch('/relay1');const d=await r.jso
 async function toggleRelay2(){const r=await fetch('/relay2');const d=await r.json();updateRelayVisual('relay2-status',d.relay2);}
 function updateRelayVisual(id,state){const el=document.getElementById(id);el.classList.toggle('h-full',state);el.classList.toggle('h-1/6',!state);}
 </script></body></html>)rawliteral";
-    server.send(200, "text/html", html);
-  });
+    server.send(200, "text/html", html); });
 
-  server.on("/data", []() {
+  server.on("/data", []()
+            {
     String json = "{\"temperature\":" + String(lastTemp, 1) + ",\"humidity\":" + String(lastHum, 1) + "}";
-    server.send(200, "application/json", json);
-  });
+    server.send(200, "application/json", json); });
 
-  server.on("/relay1", []() {
+  server.on("/relay1", []()
+            {
     relayState1 = !relayState1;
     digitalWrite(RELAY1, relayState1);
     String json = "{\"relay1\":" + String(relayState1 ? "true" : "false") +
                   ",\"relay2\":" + String(relayState2 ? "true" : "false") + "}";
-    server.send(200, "application/json", json);
-  });
+    server.send(200, "application/json", json); });
 
-  server.on("/relay2", []() {
+  server.on("/relay2", []()
+            {
     relayState2 = !relayState2;
     digitalWrite(RELAY2, relayState2);
     String json = "{\"relay1\":" + String(relayState1 ? "true" : "false") +
                   ",\"relay2\":" + String(relayState2 ? "true" : "false") + "}";
-    server.send(200, "application/json", json);
-  });
+    server.send(200, "application/json", json); });
 
-  server.on("/download", []() {
+  server.on("/download", []()
+            {
     String csv = "No,Temperature (°C),Humidity (%),Time\n";
     for (int i = 0; i < logSize; i++) {
       csv += String(i + 1) + "," + String(logs[i].temperature, 1) + "," +
              String(logs[i].humidity, 1) + "," + logs[i].timestamp + "\n";
     }
     server.sendHeader("Content-Disposition", "attachment; filename=data.csv");
-    server.send(200, "text/csv", csv);
-  });
+    server.send(200, "text/csv", csv); });
 
-  server.on("/firmware", []() {
-    server.send(200, "text/html", F("<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>"));
-  });
+  server.on("/firmware", []()
+            { server.send(200, "text/html", F("<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>")); });
 
   // OTA
-  server.on("/update", HTTP_POST, []() {
+  server.on("/update", HTTP_POST, []()
+            {
     server.sendHeader("Connection", "close");
     server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
-    ESP.restart();
-  }, []() {
+    ESP.restart(); }, []()
+            {
     HTTPUpload& upload = server.upload();
     if (upload.status == UPLOAD_FILE_START) Update.begin(UPDATE_SIZE_UNKNOWN);
     else if (upload.status == UPLOAD_FILE_WRITE) Update.write(upload.buf, upload.currentSize);
-    else if (upload.status == UPLOAD_FILE_END) Update.end(true);
-  });
+    else if (upload.status == UPLOAD_FILE_END) Update.end(true); });
 
   server.begin();
   Serial.println("Server aktif");
 }
 
 // ====================== LOOP ======================
-void loop() {
+void loop()
+{
   server.handleClient();
   unsigned long now = millis();
-  if (now - lastRead > sensorInterval) {
+  if (now - lastRead > sensorInterval)
+  {
     lastRead = now;
     timeClient.update();
     lastTemp = readTemp();
