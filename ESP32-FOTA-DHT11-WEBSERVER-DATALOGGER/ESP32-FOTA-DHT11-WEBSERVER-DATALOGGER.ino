@@ -9,10 +9,10 @@
 const char *ssid = "SSID";
 const char *password = "PASSWORD";
 
-#define DHT_PIN 14
+#define DHT_PIN 25
 #define DHT_TYPE DHT11
-#define RELAY1 25
-#define RELAY2 26
+#define RELAY1 32
+#define RELAY2 33
 
 bool relayState1 = false, relayState2 = false;
 
